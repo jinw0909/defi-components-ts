@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { PhantomConnect } from '../../components';
+import { PhantomConnect, MetaMaskConnect } from '../../components';
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../context/store";
 import { clearWallet } from "../../context/walletSlice";
-import MetamaskConnect from "../../components/MetaMaskConnect";
+import OkxWalletConnect from "../../components/OkxConnect";
 
 
 const ComponentA = React.memo(({ connectedWallet, onClick, onLogout, showLogoutButton } : any) => {
@@ -20,6 +20,7 @@ const ComponentA = React.memo(({ connectedWallet, onClick, onLogout, showLogoutB
         >
             {connectedWallet && connectedWallet.publicKey ? (
                 <>
+                    <img src={connectedWallet.icon} alt={`${connectedWallet.walletName} icon`}/>
                     <div>{`${connectedWallet.walletName} Connected`}</div>
                     <div>{`Public Key: ${connectedWallet.publicKey}`}</div>
                     {showLogoutButton && (
@@ -34,7 +35,7 @@ const ComponentA = React.memo(({ connectedWallet, onClick, onLogout, showLogoutB
         </div>
     );
 });
-const ComponentB = React.memo(() => {
+const ComponentB = React.memo(({onClick} : any) => {
     return (
         <div
             style={{
@@ -43,12 +44,16 @@ const ComponentB = React.memo(() => {
                 marginTop: '10px',
                 maxWidth: '300px',
                 margin: '10px auto',
+                position: 'relative'
             }}
         >
+
             <h4>Select a wallet to connect:</h4>
             {/* Pass the onWalletConnected callback to PhantomConnect */}
-            <PhantomConnect />
-            <MetamaskConnect />
+            <PhantomConnect/>
+            <MetaMaskConnect/>
+            <OkxWalletConnect/>
+            <div onClick={onClick} style={{position: 'absolute', top: '4px', right: '4px', cursor: 'pointer'}}>X</div>
         </div>
     );
 });
@@ -73,16 +78,24 @@ const WalletConnect = () => {
     };
 
     const handlePanelClick = () => {
-        if (!wallet) {
+        if (!wallet && !showWalletOptions) {
             setShowWalletOptions(true);
-        } else {
+        } else if (!wallet && showWalletOptions) {
+            setShowWalletOptions(false);
+        } else if (wallet) {
             setShowLogoutButton(prev => !prev);
+            setShowWalletOptions(false);
         }
     };
+
+    const handleCloseClick = () => {
+        setShowWalletOptions(prev => !prev);
+    }
 
     useEffect(() => {
         if (wallet) {
             console.log('Wallet updated in Redux store:', wallet);
+            setShowWalletOptions(false);
         } else {
             console.log('No wallet connected.');
         }
@@ -96,8 +109,8 @@ const WalletConnect = () => {
                 onLogout={handleLogout}
                 showLogoutButton={showLogoutButton}
             />
-            <div style={{display: (!wallet && showWalletOptions) ? 'block' : 'none'}}>
-                <ComponentB/>
+            <div style={{display: (showWalletOptions) ? 'block' : 'none'}}>
+                <ComponentB onClick={handleCloseClick}/>
             </div>
         </div>
     );

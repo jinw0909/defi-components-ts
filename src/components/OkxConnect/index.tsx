@@ -24,30 +24,30 @@ const fetchTokenBalance = async (provider: any, address: any) => {
     return tokenBalance;
 };
 
-const MetaMaskConnect = () => {
+const OkxWalletConnect = () => {
     const dispatch = useDispatch();
     const [loading, setLoading] = useState(false);
-    const [metaMaskProvider, setMetaMaskProvider] = useState<EIP1193Provider>();
-    const [providerInfo, setProviderInfo] = useState<EIP6963ProviderInfo>();
+    const [provider, setProvider] = useState<EIP1193Provider>();
+    const [info, setInfo] = useState<EIP6963ProviderInfo>();
     const [account, setAccount] = useState<string | null>(null);
 
-    const { getMetaMaskProvider } = useEvmProvider();
+    const { getOkxWalletProvider } = useEvmProvider();
 
     // On mount, detect the MetaMask provider.
     useEffect(() => {
         async function detectProvider() {
-            const metaMaskDetail = getMetaMaskProvider();
-            if (metaMaskDetail) {
-                const { info, provider } = metaMaskDetail;
-                console.log("MetaMask Provider detected / Provider name: ", info.name);
-                setMetaMaskProvider(provider);
-                setProviderInfo(info);
+            const okxDetail = getOkxWalletProvider();
+            if (okxDetail) {
+                const { info, provider } = okxDetail;
+                console.log("OKX Wallet provider detected / Provider name:", info.name);
+                setProvider(provider);
+                setInfo(info);
             } else {
-                console.error('MetaMask is not installed');
+                console.log("OKX Wallet is not installed");
             }
         }
         detectProvider();
-    }, [getMetaMaskProvider]);
+    }, [getOkxWalletProvider]);
 
     // Disconnect: clear local state and update Redux state
     const handleDisconnect = useCallback(() => {
@@ -57,39 +57,39 @@ const MetaMaskConnect = () => {
 
     // Connect: request accounts, fetch token balance, and update Redux state
     const handleConnect = useCallback(async () =>  {
-        if (!metaMaskProvider || loading) return;
+        if (!provider || loading) return;
         setLoading(true);
         try {
-            const accounts = await metaMaskProvider.request({ method: 'eth_requestAccounts' }) as string[];
+            const accounts = await provider.request({ method: 'eth_requestAccounts' }) as string[];
             console.log('All eth accounts: ', accounts);
             const userAccount = accounts[0];
             console.log('Connected account:', userAccount);
             setAccount(userAccount);
 
             // Fetch the token balance
-            const tokenBalance = await fetchTokenBalance(metaMaskProvider, userAccount);
+            const tokenBalance = await fetchTokenBalance(provider, userAccount);
             console.log('Token Balance:', tokenBalance);
 
-            const icon = providerInfo?.icon;
+            const icon = info?.icon;
 
             // Update the Redux store with wallet data
             dispatch(updateWallet({
-                walletName: 'metamask',
+                walletName: 'OKX Wallet',
                 publicKey: userAccount,
                 tokenBalance,
                 icon
                 //disconnect: handleDisconnect,
             }));
         } catch (error) {
-            console.error('Error connecting MetaMask:', error);
+            console.error('Error connecting OKX Wallet:', error);
         } finally {
             setLoading(false);
         }
-    }, [metaMaskProvider, loading, dispatch]);
+    }, [provider, loading, info?.icon, dispatch]);
 
     // Listen for chain and account events
     useEffect(() => {
-        if (!metaMaskProvider) return;
+        if (!provider) return;
         console.log('useEffect registered');
         // console.log('Provider is MetaMask? : ', provider.isMetaMask);
         const handleChainChanged = (chainId: any) => {
@@ -101,23 +101,23 @@ const MetaMaskConnect = () => {
             // provider.removeListener('chainChanged', handleChainChanged);
             // console.log("Cleaning up event listeners");
         };
-    }, [metaMaskProvider]);
+    }, [provider]);
 
     return (
         <div style={{margin: '8px'}}>
-            {!metaMaskProvider ? (
+            {!provider ? (
                 <button disabled style={{display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px'}}>
-                    <img style={{width: '16px', height: '16px'}} src={providerInfo?.icon} alt="MetaMask icon"/>
-                    MetaMask Not Installed
+                    <img style={{width: '16px', height: '16px'}} src={info?.icon} alt="OKX icon"/>
+                    Okx Wallet Not Installed
                 </button>
             ) : (
-                <button onClick={handleConnect} disabled={loading}  style={{display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px'}}>
-                    <img style={{width: '16px', height: '16px'}} src={providerInfo?.icon} alt="MetaMask icon"/>
-                    {loading ? "Connecting..." : "Connect to MetaMask"}
+                <button onClick={handleConnect} disabled={loading} style={{display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px'}}>
+                    <img style={{width: '16px', height: '16px'}} src={info?.icon} alt="OKX icon"/>
+                    {loading ? "Connecting..." : "Connect to OKX Wallet"}
                 </button>
             )}
         </div>
     );
 };
 
-export default React.memo(MetaMaskConnect);
+export default React.memo(OkxWalletConnect);

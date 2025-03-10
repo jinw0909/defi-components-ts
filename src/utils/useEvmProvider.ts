@@ -1,4 +1,4 @@
-// useMetaMaskProvider.ts
+// useEvmProvider.ts
 import { useState, useEffect } from "react";
 
 export interface EIP6963ProviderInfo {
@@ -39,7 +39,7 @@ declare global {
     }
 }
 
-export const useMetaMaskProvider = () => {
+export const useEvmProvider = () => {
     const [providers, setProviders] = useState<EIP6963ProviderDetail[]>([]);
 
     useEffect(() => {
@@ -62,8 +62,11 @@ export const useMetaMaskProvider = () => {
         };
     }, []);
 
-    const getMetaMaskProvider = (): EIP1193Provider | undefined =>
-        providers.find((detail) => detail.info.name.toLowerCase() === "metamask")?.provider;
+    const getMetaMaskProvider = (): EIP6963ProviderDetail | undefined =>
+        providers.find((detail) => detail.info.name.toLowerCase() === "metamask");
 
-    return { providers, getMetaMaskProvider };
+    const getOkxWalletProvider = () : EIP6963ProviderDetail | undefined =>
+        providers.find((detail) => detail.info.rdns === "com.okex.wallet");
+
+    return { providers, getMetaMaskProvider, getOkxWalletProvider };
 };

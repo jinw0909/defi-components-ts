@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { useMetaMaskProvider } from "../../utils/useMetaMaskProvider";
+import { useEvmProvider } from "../../utils/useEvmProvider";
 
 const ProviderList: React.FC = () => {
-    const { providers, getMetaMaskProvider } = useMetaMaskProvider();
+    const { providers, getMetaMaskProvider } = useEvmProvider();
 
     const handleConnectMetaMask = async () => {
         const metamaskProvider = getMetaMaskProvider();
         if (metamaskProvider) {
             try {
-                await metamaskProvider.request({method: "eth_requestAccounts"});
+                await metamaskProvider.provider.request({method: "eth_requestAccounts"});
             } catch (error) {
                 console.error("Failed to connect to MetaMask:", error);
             }

@@ -11,6 +11,7 @@ function App() {
     <div className="App">
         <Provider store={store}>
             <WalletConnect/>
+            {/*<ProviderList/>*/}
         </Provider>
     </div>
   );
