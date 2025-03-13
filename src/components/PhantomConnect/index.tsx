@@ -106,7 +106,7 @@ const usePhantomProps = () => {
             const signAndAuthenticate = async () => {
                 try {
                     // Step 1: Get the challenge from the backend.
-                    const challengeResponse = await fetch(`http://localhost:8080/auth/challenge?publicKey=${wallet.publicKey}`);
+                    const challengeResponse = await fetch(`${process.env.REACT_APP_SERVER}/auth/challenge?publicKey=${wallet.publicKey}`);
                     if (!challengeResponse.ok) {
                         throw new Error("Failed to fetch challenge");
                     }
@@ -124,7 +124,7 @@ const usePhantomProps = () => {
                     console.log("Signature:");
 
                     // Step 3: Send authentication request with the signed challenge.
-                    const authResponse = await fetch("http://localhost:8080/auth/phantom", {
+                    const authResponse = await fetch(`${process.env.REACT_APP_SERVER}/auth/phantom`, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
@@ -151,7 +151,7 @@ const usePhantomProps = () => {
 
             signAndAuthenticate();
         }
-    }, [provider, wallet]);
+    }, [wallet]);
 
     useEffect(() => {
         if (!provider) return;

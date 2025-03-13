@@ -51,14 +51,13 @@ const MetaMaskConnect = () => {
         }
         detectProvider();
     }, [getMetaMaskProvider]);
-
     useEffect(() => {
         // Only run if a wallet is connected and it's MetaMask.
         if (wallet && wallet.publicKey && wallet.walletName === "metamask") {
             const signAndAuthenticate = async () => {
                 try {
                     // Step 1: Get the challenge from the backend.
-                    const challengeResponse = await fetch(`http://localhost:8080/auth/challenge?publicKey=${wallet.publicKey}`);
+                    const challengeResponse = await fetch(`${process.env.REACT_APP_SERVER}/auth/challenge?publicKey=${wallet.publicKey}`);
                     if (!challengeResponse.ok) {
                         throw new Error("Failed to fetch challenge");
                     }
@@ -79,7 +78,7 @@ const MetaMaskConnect = () => {
                     console.log("Signature:", signature);
 
                     // Step 3: Send authentication request with the signed challenge.
-                    const authResponse = await fetch("http://localhost:8080/auth/wallet", {
+                    const authResponse = await fetch(`${process.env.REACT_APP_SERVER}/auth/wallet`, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
