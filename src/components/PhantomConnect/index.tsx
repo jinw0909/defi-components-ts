@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { PublicKey, Connection } from '@solana/web3.js';
 import getPhantomProvider from '../../utils/getPhantomProvider';
+import bs58 from 'bs58';
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {useDispatch, useSelector} from "react-redux";
-import { updateWallet, clearWallet } from "../../context/walletSlice";
+import {updateWallet, clearWallet, WalletState} from "../../context/walletSlice";
+import {Buffer} from "buffer";
+import {RootState} from "../../context/store";
 
 const CUSTOM_RPC_URL = 'https://winter-evocative-silence.solana-mainnet.quiknode.pro/04a5e639b0bd9ceeec758a6140dc1aa1b08f62bd';
 const connection = new Connection(CUSTOM_RPC_URL);
@@ -12,6 +15,7 @@ const PHANTOM_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYA
 
 const usePhantomProps = () => {
     const dispatch = useDispatch();
+    const wallet = useSelector((state: RootState) => state.wallet) as WalletState | null;
     const [publicKey, setPublicKey] = useState(null);
 
     const handleDisconnect = useCallback(async () => {
@@ -95,6 +99,59 @@ const usePhantomProps = () => {
     const connectedMethods = useMemo(() => [
         { name: 'Disconnect', onClick: handleDisconnect }
     ], [handleDisconnect]);
+
+    useEffect(() => {
+        // Only run if a wallet is connected and it's MetaMask.
+        if (wallet && wallet.publicKey && wallet.walletName === "phantom") {
+            const signAndAuthenticate = async () => {
+                try {
+                    // Step 1: Get the challenge from the backend.
+                    const challengeResponse = await fetch(`http://localhost:8080/auth/challenge?publicKey=${wallet.publicKey}`);
+                    if (!challengeResponse.ok) {
+                        throw new Error("Failed to fetch challenge");
+                    }
+                    const challenge = await challengeResponse.text()
+                    console.log("Received challenge:", challenge);
+                    // const messageHash = ethers.hashMessage(challenge);
+                    // console.log("Computed Message Hash:", messageHash);
+                    const encodedChallenge = new TextEncoder().encode(challenge);
+                    // Step 2: Use MetaMask to sign the challenge.
+                    if (!provider) {
+                        throw new Error("OKX wallet is not available");
+                    }
+                    const signedMessage = await provider.signMessage(encodedChallenge);
+                    const signature = bs58.encode(signedMessage.signature);
+                    console.log("Signature:");
+
+                    // Step 3: Send authentication request with the signed challenge.
+                    const authResponse = await fetch("http://localhost:8080/auth/phantom", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            walletName: wallet.walletName,
+                            publicKey: wallet.publicKey,
+                            challenge,
+                            signature,
+                        }),
+                    });
+
+                    if (!authResponse.ok) {
+                        throw new Error("Authentication failed");
+                    }
+                    const authData = await authResponse.json();
+                    console.log("Authentication successful:", authData);
+                    // Optionally, update your Redux state or perform further actions with authData.
+
+                } catch (error: any) {
+                    console.error("Error during authentication:", error.message);
+                }
+            };
+
+            signAndAuthenticate();
+        }
+    }, [provider, wallet]);
 
     useEffect(() => {
         if (!provider) return;

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PhantomConnect, MetaMaskConnect } from '../../components';
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../context/store";
-import { clearWallet } from "../../context/walletSlice";
+import {clearWallet, WalletState} from "../../context/walletSlice";
 import OkxWalletConnect from "../../components/OkxConnect";
 
 
@@ -60,7 +60,7 @@ const ComponentB = React.memo(({onClick} : any) => {
 
 const WalletConnect = () => {
     // Get wallet state from Redux store.
-    const wallet = useSelector((state: RootState) => state.wallet);
+    const wallet = useSelector((state: RootState) => state.wallet) as WalletState | null;
     const dispatch = useDispatch();
 
     const [showWalletOptions, setShowWalletOptions] = useState(false);
@@ -100,6 +100,7 @@ const WalletConnect = () => {
             console.log('No wallet connected.');
         }
     }, [wallet]);
+
 
     return (
         <div>

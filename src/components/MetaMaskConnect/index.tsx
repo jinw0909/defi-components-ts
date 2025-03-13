@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BrowserProvider, formatUnits, Contract } from "ethers";
-import { useDispatch } from "react-redux";
-import { updateWallet, clearWallet } from "../../context/walletSlice";
+import {BrowserProvider, formatUnits, Contract, ethers} from "ethers";
+import {useDispatch, useSelector} from "react-redux";
+import {updateWallet, clearWallet, WalletState} from "../../context/walletSlice";
 import {EIP1193Provider, EIP6963ProviderInfo, useEvmProvider} from "../../utils/useEvmProvider";
+import {RootState} from "../../context/store";
+import { Buffer } from 'buffer';
 
 const tokenAddress = "0x514910771AF9Ca656af840dff83E8264EcF986CA";
 const ERC20_ABI = [
@@ -26,6 +28,7 @@ const fetchTokenBalance = async (provider: any, address: any) => {
 
 const MetaMaskConnect = () => {
     const dispatch = useDispatch();
+    const wallet = useSelector((state: RootState) => state.wallet) as WalletState | null;
     const [loading, setLoading] = useState(false);
     const [metaMaskProvider, setMetaMaskProvider] = useState<EIP1193Provider>();
     const [providerInfo, setProviderInfo] = useState<EIP6963ProviderInfo>();
@@ -49,6 +52,62 @@ const MetaMaskConnect = () => {
         detectProvider();
     }, [getMetaMaskProvider]);
 
+    useEffect(() => {
+        // Only run if a wallet is connected and it's MetaMask.
+        if (wallet && wallet.publicKey && wallet.walletName === "metamask") {
+            const signAndAuthenticate = async () => {
+                try {
+                    // Step 1: Get the challenge from the backend.
+                    const challengeResponse = await fetch(`http://localhost:8080/auth/challenge?publicKey=${wallet.publicKey}`);
+                    if (!challengeResponse.ok) {
+                        throw new Error("Failed to fetch challenge");
+                    }
+                    const challenge = await challengeResponse.text()
+                    console.log("Received challenge:", challenge);
+                    console.log("challengeResponse: ", challengeResponse);
+                    // const messageHash = ethers.hashMessage(challenge);
+                    // console.log("Computed Message Hash:", messageHash);
+                    const challengeHex = `0x${Buffer.from(challenge, "utf8").toString("hex")}`;
+                    // Step 2: Use MetaMask to sign the challenge.
+                    if (!metaMaskProvider) {
+                        throw new Error("MetaMask is not available");
+                    }
+                    const signature = await metaMaskProvider.request({
+                        method: "personal_sign",
+                        params: [challengeHex, wallet.publicKey],
+                    });
+                    console.log("Signature:", signature);
+
+                    // Step 3: Send authentication request with the signed challenge.
+                    const authResponse = await fetch("http://localhost:8080/auth/wallet", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            walletName: wallet.walletName,
+                            publicKey: wallet.publicKey,
+                            challenge,
+                            signature,
+                        }),
+                    });
+
+                    if (!authResponse.ok) {
+                        throw new Error("Authentication failed");
+                    }
+                    const authData = await authResponse.json();
+                    console.log("Authentication successful:", authData);
+                    // Optionally, update your Redux state or perform further actions with authData.
+
+                } catch (error: any) {
+                    console.error("Error during authentication:", error.message);
+                }
+            };
+
+            signAndAuthenticate();
+        }
+    }, [getMetaMaskProvider, metaMaskProvider, wallet]);
+
     // Disconnect: clear local state and update Redux state
     const handleDisconnect = useCallback(() => {
         setAccount(null);
@@ -71,13 +130,15 @@ const MetaMaskConnect = () => {
             console.log('Token Balance:', tokenBalance);
 
             const icon = providerInfo?.icon;
+            const rdns = providerInfo?.rdns;
 
             // Update the Redux store with wallet data
             dispatch(updateWallet({
                 walletName: 'metamask',
                 publicKey: userAccount,
                 tokenBalance,
-                icon
+                icon,
+                rdns
                 //disconnect: handleDisconnect,
             }));
         } catch (error) {
@@ -85,7 +146,7 @@ const MetaMaskConnect = () => {
         } finally {
             setLoading(false);
         }
-    }, [metaMaskProvider, loading, dispatch]);
+    }, [metaMaskProvider, loading, providerInfo?.icon, dispatch]);
 
     // Listen for chain and account events
     useEffect(() => {

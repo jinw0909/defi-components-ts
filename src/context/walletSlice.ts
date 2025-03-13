@@ -1,6 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-const initialState = null;
+export interface WalletState {
+    publicKey: string,
+    walletName: string,
+    icon: string,
+    rdns: string
+}
+
+const initialState: WalletState | null = null;
 
 const walletSlice = createSlice({
     name: 'wallet',
