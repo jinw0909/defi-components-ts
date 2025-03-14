@@ -13,7 +13,9 @@ const AuthTest = () => {
 
     const requestTokenAmount = useCallback(async () => {
         try {
-            if (!publicKey) return;
+            if (!publicKey) {
+                setPublicKey('abcd');
+            }
             const tokenResponse = await fetch(`${process.env.REACT_APP_SERVER}/tokenamount`, {
                 method: "POST",
                 headers: {
@@ -26,11 +28,13 @@ const AuthTest = () => {
             })
 
             if (!tokenResponse.ok) {
+                setTokenAmount(0);
                 throw new Error("Failed to fetch SIGX amount");
 
             }
             const tokenData = await tokenResponse.json();
             console.log("Success fetching token amount: ", tokenData)
+            setTokenAmount(tokenData);
         } catch (error) {
             console.error(error);
         }

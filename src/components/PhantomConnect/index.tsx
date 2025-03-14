@@ -100,15 +100,15 @@ const usePhantomProps = () => {
         { name: 'Disconnect', onClick: handleDisconnect }
     ], [handleDisconnect]);
 
-    const prevWalletKey = useRef<string | null>(null);
+    // const prevWalletKey = useRef<string | null>(null);
 
     useEffect(() => {
         // Only run if a wallet is connected and it's MetaMask.
         if (wallet && wallet.publicKey && wallet.walletName === "phantom") {
 
             // Only run if the publicKey has changed
-            if (prevWalletKey.current === wallet.publicKey) return;
-            prevWalletKey.current = wallet.publicKey;
+            // if (prevWalletKey.current === wallet.publicKey) return;
+            // prevWalletKey.current = wallet.publicKey;
             const signAndAuthenticate = async () => {
                 try {
                     // Step 1: Get the challenge from the backend.
@@ -127,7 +127,7 @@ const usePhantomProps = () => {
                     }
                     const signedMessage = await provider.signMessage(encodedChallenge);
                     const signature = bs58.encode(signedMessage.signature);
-                    console.log("Signature:");
+                    console.log("Signature: ", signature);
 
                     // Step 3: Send authentication request with the signed challenge.
                     const authResponse = await fetch(`${process.env.REACT_APP_SERVER}/auth/phantom`, {
