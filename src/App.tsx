@@ -5,6 +5,7 @@ import PhantomConnect from "./components/PhantomConnect";
 import {Provider} from "react-redux";
 import { store } from "./context/store";
 import {WalletConnect} from "./screens";
+import AuthTest from "./components/AuthTest";
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Provider store={store}>
             <WalletConnect/>
             {/*<ProviderList/>*/}
+            <AuthTest/>
         </Provider>
     </div>
   );

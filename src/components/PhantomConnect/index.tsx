@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, {useState, useEffect, useCallback, useMemo, useRef} from 'react';
 import { PublicKey, Connection } from '@solana/web3.js';
 import getPhantomProvider from '../../utils/getPhantomProvider';
 import bs58 from 'bs58';
@@ -100,9 +100,15 @@ const usePhantomProps = () => {
         { name: 'Disconnect', onClick: handleDisconnect }
     ], [handleDisconnect]);
 
+    const prevWalletKey = useRef<string | null>(null);
+
     useEffect(() => {
         // Only run if a wallet is connected and it's MetaMask.
         if (wallet && wallet.publicKey && wallet.walletName === "phantom") {
+
+            // Only run if the publicKey has changed
+            if (prevWalletKey.current === wallet.publicKey) return;
+            prevWalletKey.current = wallet.publicKey;
             const signAndAuthenticate = async () => {
                 try {
                     // Step 1: Get the challenge from the backend.
@@ -129,6 +135,7 @@ const usePhantomProps = () => {
                         headers: {
                             "Content-Type": "application/json",
                         },
+                        credentials: "include",
                         body: JSON.stringify({
                             walletName: wallet.walletName,
                             publicKey: wallet.publicKey,
@@ -161,12 +168,14 @@ const usePhantomProps = () => {
             console.log('Phantom connected:', keyStr);
             setPublicKey(keyStr);
             // let solAmount = await handleFetchSolana();
-            let tokenAmount = await handleFetchToken();
+
+            //let tokenAmount = await handleFetchToken();
+
             // Update Redux state without including the disconnect function.
             dispatch(updateWallet({
                 walletName: 'phantom',
                 publicKey: keyStr,
-                tokenBalance: tokenAmount,
+                // tokenBalance: tokenAmount,
                 icon: PHANTOM_ICON }));
         });
 
