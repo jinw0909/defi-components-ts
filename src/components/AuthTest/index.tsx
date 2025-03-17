@@ -52,7 +52,8 @@ const AuthTest = () => {
 
         if (!profileResponse.ok) {
             console.error(`Failed to fetch profile: ${profileResponse.statusText}`);
-            setProfile(null);
+            setProfile('log in first to view your profile');
+            return;
         }
 
         const profileData = await profileResponse.json();
