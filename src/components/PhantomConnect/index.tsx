@@ -147,9 +147,29 @@ const usePhantomProps = () => {
                     if (!authResponse.ok) {
                         throw new Error("Authentication failed");
                     }
+
                     const authData = await authResponse.json();
                     console.log("Authentication successful:", authData);
-                    // Optionally, update your Redux state or perform further actions with authData.
+
+                    const sendResponse = await fetch(`${process.env.REACT_APP_SERVER}/sendwalletinfo`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        credentials: "include",
+                        body: JSON.stringify({
+                            publicKey: authData.publicKey,
+                            walletName: authData.walletName,
+                            sigx: authData.sigx
+                        })
+                    });
+
+                    if (sendResponse.ok) {
+                        console.log("successfully updated user info");
+                    } else {
+                        console.error("failed to update user info");
+                    }
+
 
                 } catch (error: any) {
                     console.error("Error during authentication:", error.message);

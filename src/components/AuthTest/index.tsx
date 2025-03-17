@@ -6,6 +6,7 @@ import {RootState} from "../../context/store";
 const AuthTest = () => {
     const [publicKey, setPublicKey] = useState<string | null>(null);
     const [tokenAmount, setTokenAmount] = useState(0);
+    const [profile, setProfile] = useState<any>();
     const wallet = useSelector((state:RootState) => state.wallet) as WalletState | null;
     useEffect(() => {
         setPublicKey(wallet?.publicKey ?? null)
@@ -40,10 +41,31 @@ const AuthTest = () => {
         }
 
     }, [publicKey])
+    const requestUserProfile = useCallback(async () => {
+        const profileResponse = await fetch(`${process.env.REACT_APP_SERVER}/profile`, {
+            method: "get",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!profileResponse.ok) {
+            console.error(`Failed to fetch profile: ${profileResponse.statusText}`);
+            setProfile(null);
+        }
+
+        const profileData = await profileResponse.json();
+        console.log("User profile: ", profileData);
+        setProfile(profileData);
+    }, [])
     return(
         <div>
             <button onClick={requestTokenAmount}>Get SIGX amount</button>
+            <button onClick={requestUserProfile}>Get User Profile</button>
             <div>amount : {tokenAmount}</div>
+            <div>profile</div>
+            <div>{JSON.stringify(profile)}</div>
         </div>
     )
 }
