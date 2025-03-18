@@ -4,7 +4,7 @@ import {useDispatch, useSelector} from "react-redux";
 import {updateWallet, clearWallet, WalletState} from "../../context/walletSlice";
 import {EIP1193Provider, EIP6963ProviderInfo, useEvmProvider} from "../../utils/useEvmProvider";
 import {RootState} from "../../context/store";
-import { Buffer } from 'buffer';
+import { hexlify, toUtf8Bytes } from "ethers";
 
 const tokenAddress = "0x514910771AF9Ca656af840dff83E8264EcF986CA";
 const ERC20_ABI = [
@@ -66,7 +66,10 @@ const MetaMaskConnect = () => {
                     console.log("challengeResponse: ", challengeResponse);
                     // const messageHash = ethers.hashMessage(challenge);
                     // console.log("Computed Message Hash:", messageHash);
-                    const challengeHex = `0x${Buffer.from(challenge, "utf8").toString("hex")}`;
+                    // console.log("hexlified: ", ethers.hexlify(ethers.toUtf8String(challenge)));
+                    const challengeHex = hexlify(toUtf8Bytes(challenge))
+                    console.log("challengeHex: ", challengeHex);
+                    // const challengeHex = `0x${Buffer.from(challenge, "utf8").toString("hex")}`;
                     // Step 2: Use MetaMask to sign the challenge.
                     if (!metaMaskProvider) {
                         throw new Error("MetaMask is not available");
@@ -83,6 +86,7 @@ const MetaMaskConnect = () => {
                         headers: {
                             "Content-Type": "application/json",
                         },
+                        credentials: "include",
                         body: JSON.stringify({
                             walletName: wallet.walletName,
                             publicKey: wallet.publicKey,

@@ -18,14 +18,14 @@ const AuthTest = () => {
                 setPublicKey('abcd');
             }
             const tokenResponse = await fetch(`${process.env.REACT_APP_SERVER}/tokenamount`, {
-                method: "POST",
+                method: "GET",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 credentials: "include",
-                body: JSON.stringify({
-                    publicKey: publicKey
-                })
+                // body: JSON.stringify({
+                //     publicKey: publicKey
+                // })
             })
 
             if (!tokenResponse.ok) {

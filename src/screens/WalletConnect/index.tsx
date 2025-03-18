@@ -72,6 +72,20 @@ const WalletConnect = () => {
         if (disconnectFn) {
             disconnectFn();
         }
+        const logoutResponse = await fetch (`${process.env.REACT_APP_SERVER}/logout`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!logoutResponse.ok) {
+            console.error(`failed to log out: ${logoutResponse.statusText}`);
+            return;
+        }
+        console.log("logout successful");
+
         dispatch(clearWallet());
         setDisconnectFn(null);
         setShowLogoutButton(false);

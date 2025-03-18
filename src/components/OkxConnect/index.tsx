@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { BrowserProvider, formatUnits, Contract } from "ethers";
+import React, {useCallback, useEffect, useState} from 'react';
+import {BrowserProvider, hexlify, toUtf8Bytes} from "ethers";
 import {useDispatch, useSelector} from "react-redux";
-import {updateWallet, clearWallet, WalletState} from "../../context/walletSlice";
+import {clearWallet, updateWallet, WalletState} from "../../context/walletSlice";
 import {EIP1193Provider, EIP6963ProviderInfo, useEvmProvider} from "../../utils/useEvmProvider";
-import {Buffer} from "buffer";
 import {RootState} from "../../context/store";
 
 const tokenAddress = "0x514910771AF9Ca656af840dff83E8264EcF986CA";
@@ -18,12 +17,12 @@ const fetchTokenBalance = async (provider: any, address: any) => {
     const ethersProvider = new BrowserProvider(provider);
 
     // Create a contract instance for the token
-    const tokenContract = new Contract(tokenAddress, ERC20_ABI, ethersProvider);
-    const rawTokenBalance = await tokenContract.balanceOf(address);
-    const decimals = await tokenContract.decimals();
-    const tokenBalance = formatUnits(rawTokenBalance, decimals);
-    console.log("tokenBalance: ", tokenBalance);
-    return tokenBalance;
+    // const tokenContract = new Contract(tokenAddress, ERC20_ABI, ethersProvider);
+    // const rawTokenBalance = await tokenContract.balanceOf(address);
+    // const decimals = await tokenContract.decimals();
+    // const tokenBalance = formatUnits(rawTokenBalance, decimals);
+    // console.log("tokenBalance: ", tokenBalance);
+    return 0;
 };
 
 const OkxWalletConnect = () => {
@@ -67,7 +66,8 @@ const OkxWalletConnect = () => {
                     console.log("challengeResponse: ", challengeResponse);
                     // const messageHash = ethers.hashMessage(challenge);
                     // console.log("Computed Message Hash:", messageHash);
-                    const challengeHex = `0x${Buffer.from(challenge, "utf8").toString("hex")}`;
+                    // const challengeHex = `0x${Buffer.from(challenge, "utf8").toString("hex")}`;
+                    const challengeHex = hexlify(toUtf8Bytes(challenge));
                     // Step 2: Use MetaMask to sign the challenge.
                     if (!provider) {
                         throw new Error("OKX wallet is not available");
@@ -84,6 +84,7 @@ const OkxWalletConnect = () => {
                         headers: {
                             "Content-Type": "application/json",
                         },
+                        credentials: 'include',
                         body: JSON.stringify({
                             walletName: wallet.walletName,
                             publicKey: wallet.publicKey,
